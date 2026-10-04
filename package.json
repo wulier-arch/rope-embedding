@@ -1,0 +1,41 @@
+{
+  "name": "rope-embedding",
+  "version": "0.1.0",
+  "description": "零依赖的旋转位置编码（RoPE）实现：从数学定义手写，附正交性、范数保持与相对位置性质的数值验证。",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "verify": "node -e \"import('./src/index.js').then(m=>{const r=m.verifyRoPE();for(const c of r.checks)console.log((c.passed?'✔':'✘')+' '+c.name+'  '+c.detail);console.log(r.passed?'\\n全部通过':'\\n有失败项');process.exit(r.passed?0:1)})\""
+  },
+  "keywords": [
+    "rope",
+    "rotary-position-embedding",
+    "position-encoding",
+    "transformer",
+    "attention",
+    "llm",
+    "zero-dependency"
+  ],
+  "license": "MIT",
+  "author": "wulier-arch",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wulier-arch/rope-embedding.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wulier-arch/rope-embedding/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false
+}
