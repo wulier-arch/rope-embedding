@@ -44,7 +44,7 @@ RoPE 出自 [RoFormer](https://arxiv.org/abs/2104.09864)（Su et al., 2021），
 
 ```bash
 git clone https://github.com/wulier-arch/rope-embedding.git
-cd rope-embedding && npm test     # 48 个用例，无需 npm install
+cd rope-embedding && npm test     # 51 个用例，无需 npm install
 ```
 
 用法：
@@ -172,6 +172,10 @@ const k2 = applyRoPE(newToken, [1, 8, 1, 64], { offset: 16 });
 - **不处理 batch 维度的位置差异**。同一次调用里所有 batch 共用同一套位置，
   这是标准做法；如果你的场景需要 per-batch 位置，请拆成多次调用。
 - **`dim=2` 时两种 layout 等价**，写测试时注意别用它来区分布局。
+- **接错 layout 不会报错，只会静默变差**。`half` 布局的数据用 `interleaved`
+  去旋转，范数照样守恒、矩阵照样正交——每条数学性质都过，只有语义是错的。
+  `test/rope.test.js` 里专门把这一点钉成用例：光看输出形状和数值范围，
+  永远发现不了这类错配，只能靠事前确认对方模型的实现。
 - **精度**：使用 `Math.cos` / `Math.sin`，在位置极大（> 1e6）时角度精度会下降。
   常规上下文长度下误差在机器 epsilon 量级。
 

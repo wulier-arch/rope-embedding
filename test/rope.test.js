@@ -450,6 +450,46 @@ describe("verifyRoPE 内置自检", () => {
   });
 });
 
+/* -------------------------------------------------- 接错布局会怎样 */
+
+/**
+ * 这两种对接错误在真实集成里都会出现，而且**不报错**：形状对得上、
+ * 数值有界、注意力照常算，只是效果静默变差。用测试把它们钉住，
+ * 以后改动不能悄悄让「错配 ≈ 正确」，否则一旦发生就再也查不出来。
+ */
+describe("接错配对约定会静默出错", () => {
+  it("half 布局的数据用 interleaved 去旋转，结果明显不同", () => {
+    const dim = 8;
+    const x = Float64Array.from([1, 2, 3, 4, 5, 6, 7, 8]);
+    const right = applyRoPEToVector(x, 5, { layout: "half" });
+    const wrong = applyRoPEToVector(x, 5, { layout: "interleaved" });
+    let worst = 0;
+    for (let i = 0; i < dim; i++) worst = Math.max(worst, Math.abs(right[i] - wrong[i]));
+    assert.ok(worst > 0.5, `错配后应产生明显差异，实得最大差 ${worst}`);
+  });
+
+  it("错配后范数仍然守恒 —— 所以光看范数根本发现不了", () => {
+    const x = Float64Array.from([0.3, -1.4, 2.2, 0.7, -0.9, 1.1, 3.0, -0.2]);
+    const n = Math.hypot(...x);
+    for (const layout of ["half", "interleaved"]) {
+      const y = applyRoPEToVector(x, 37, { layout });
+      assert.ok(Math.abs(Math.hypot(...y) - n) < 1e-12, `${layout} 下范数应守恒`);
+    }
+  });
+
+  it("错配后矩阵依然正交 —— 每条数学性质都过，只有语义是错的", () => {
+    const dim = 8;
+    const R = ropeMatrix(13, dim, { layout: "interleaved" });
+    for (let i = 0; i < dim; i++) {
+      for (let j = 0; j < dim; j++) {
+        let acc = 0;
+        for (let k = 0; k < dim; k++) acc += R[k * dim + i] * R[k * dim + j];
+        assert.ok(Math.abs(acc - (i === j ? 1 : 0)) < 1e-12);
+      }
+    }
+  });
+});
+
 /* ------------------------------------------------------------------ 常量 */
 
 describe("导出常量", () => {
